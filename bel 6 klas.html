@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Игра: Литературни родове и жанрове</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #2f2a45;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(255, 214, 165, 0.75) 0 120px, transparent 121px),
+        radial-gradient(circle at 90% 10%, rgba(202, 240, 248, 0.85) 0 150px, transparent 151px),
+        radial-gradient(circle at 20% 90%, rgba(205, 245, 190, 0.75) 0 150px, transparent 151px),
+        linear-gradient(135deg, #fff6df 0%, #eaf8ff 50%, #f4edff 100%);
+      min-height: 100vh;
+      padding: 28px 14px;
+    }
+
+    .game-wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.92);
+      border: 3px solid rgba(96, 75, 153, 0.18);
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(47, 42, 69, 0.16);
+      overflow: hidden;
+    }
+
+    header {
+      position: relative;
+      padding: 38px 30px 30px;
+      text-align: center;
+      background: linear-gradient(120deg, #7bdff2, #b2f7ef, #eff7a1, #ffd6a5);
+    }
+
+    header::before,
+    header::after {
+      content: "✦ 📚 ✎";
+      position: absolute;
+      font-size: 34px;
+      opacity: 0.65;
+    }
+
+    header::before {
+      left: 24px;
+      top: 24px;
+      transform: rotate(-10deg);
+    }
+
+    header::after {
+      right: 24px;
+      bottom: 20px;
+      transform: rotate(10deg);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 50px);
+      color: #3d2c8d;
+      text-shadow: 1px 2px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    .subtitle {
+      margin: 12px auto 0;
+      font-size: 19px;
+      font-weight: 700;
+      color: #4d4c7d;
+    }
+
+    main {
+      padding: 28px;
+    }
+
+    .info-box {
+      background: #fff8e8;
+      border-left: 8px solid #ffb703;
+      border-radius: 18px;
+      padding: 16px 18px;
+      line-height: 1.55;
+      font-size: 17px;
+      margin-bottom: 22px;
+    }
+
+    .top-panel {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: #f0f7ff;
+      border: 2px dashed #8ecae6;
+      border-radius: 18px;
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+
+    .progress-text {
+      font-weight: 900;
+      color: #3d2c8d;
+      font-size: 18px;
+    }
+
+    .score-text {
+      font-weight: 900;
+      color: #146c43;
+      background: #ddf7e8;
+      border-radius: 999px;
+      padding: 10px 16px;
+    }
+
+    .progress-bar {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 14px;
+      background: #dceeff;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7bdff2, #3d2c8d);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .question-card {
+      background: #ffffff;
+      border: 2px solid #e7ddff;
+      border-radius: 24px;
+      padding: 26px;
+      min-height: 390px;
+      box-shadow: 0 12px 26px rgba(61, 44, 141, 0.1);
+      animation: popIn 0.25s ease;
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .question-card h2 {
+      margin: 0 0 18px;
+      font-size: 23px;
+      line-height: 1.35;
+      color: #3d2c8d;
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      padding: 14px 16px;
+      background: #f9f7ff;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      cursor: pointer;
+      line-height: 1.35;
+      font-size: 17px;
+      transition: 0.15s ease;
+    }
+
+    label:hover {
+      background: #eefaff;
+      border-color: #90e0ef;
+      transform: translateY(-1px);
+    }
+
+    input[type="radio"] {
+      margin-right: 9px;
+      transform: scale(1.18);
+    }
+
+    label.disabled {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .correct {
+      background: #d8f8d2 !important;
+      border-color: #67c56b !important;
+    }
+
+    .wrong {
+      background: #ffe0e0 !important;
+      border-color: #ff7b7b !important;
+    }
+
+    .feedback {
+      margin-top: 18px;
+      padding: 15px 18px;
+      border-radius: 16px;
+      font-weight: 900;
+      font-size: 18px;
+      display: none;
+    }
+
+    .feedback.ok {
+      display: block;
+      background: #d8f8d2;
+      color: #1b6b2a;
+      border: 2px solid #67c56b;
+    }
+
+    .feedback.no {
+      display: block;
+      background: #ffe0e0;
+      color: #8f1d1d;
+      border: 2px solid #ff7b7b;
+    }
+
+    .feedback.warn {
+      display: block;
+      background: #fff3bf;
+      color: #806000;
+      border: 2px solid #ffd166;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin: 26px 0 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 24px;
+      font-size: 17px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(47, 42, 69, 0.15);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(47, 42, 69, 0.19);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .check-btn {
+      background: #3d2c8d;
+      color: white;
+    }
+
+    .next-btn {
+      background: #06d6a0;
+      color: #083b2d;
+    }
+
+    .reset-btn {
+      background: #ffd166;
+      color: #3b2c00;
+    }
+
+    .final-screen {
+      display: none;
+      text-align: center;
+      background: #ffffff;
+      border: 2px solid #d9ccff;
+      border-radius: 24px;
+      padding: 32px 24px;
+      box-shadow: 0 12px 26px rgba(61, 44, 141, 0.1);
+    }
+
+    .final-screen h2 {
+      color: #3d2c8d;
+      font-size: 34px;
+      margin-top: 0;
+    }
+
+    .final-score {
+      font-size: 26px;
+      font-weight: 900;
+      margin: 18px 0;
+    }
+
+    .final-message {
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .key {
+      margin-top: 24px;
+      background: #f6f1ff;
+      border-radius: 20px;
+      padding: 18px 20px;
+      border: 2px solid #d9ccff;
+      text-align: left;
+    }
+
+    .key summary {
+      cursor: pointer;
+      font-weight: 900;
+      color: #3d2c8d;
+      font-size: 18px;
+    }
+
+    .key p {
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 18px;
+      color: #625f7d;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding: 18px;
+      }
+
+      .top-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .question-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-wrap">
+    <header>
+      <h1>Игра: Литературни родове и жанрове</h1>
+      <p class="subtitle">15 въпроса за ученици от 6. клас</p>
+    </header>
+
+    <main>
+      <div class="info-box">
+        <strong>Инструкция:</strong>
+        Избери отговор и натисни „Провери“. След това ще видиш дали си отговорил вярно и ще можеш да преминеш към следващия въпрос.
+      </div>
+
+      <section class="top-panel" id="topPanel">
+        <div class="progress-text" id="progressText">Въпрос 1 от 15</div>
+        <div class="score-text" id="scoreText">Точки: 0</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </section>
+
+      <section class="question-card" id="questionCard">
+        <h2 id="questionText"></h2>
+        <div class="answers" id="answersBox"></div>
+        <div class="feedback" id="feedbackBox"></div>
+      </section>
+
+      <div class="actions" id="gameButtons">
+        <button type="button" class="check-btn" id="checkBtn" onclick="checkCurrentAnswer()">Провери</button>
+        <button type="button" class="next-btn" id="nextBtn" onclick="nextQuestion()" disabled>Следващ въпрос</button>
+        <button type="button" class="reset-btn" onclick="restartGame()">Започни отначало</button>
+      </div>
+
+      <section class="final-screen" id="finalScreen">
+        <h2>Край на играта! 🎉</h2>
+        <div class="final-score" id="finalScore"></div>
+        <p class="final-message" id="finalMessage"></p>
+
+        <button type="button" class="reset-btn" onclick="restartGame()">Играй отново</button>
+
+        <details class="key">
+          <summary>Ключ с верните отговори</summary>
+          <p>
+            1-Б, 2-В, 3-Б, 4-Б, 5-А, 6-Б, 7-В, 8-Б, 9-В, 10-В, 11-А, 12-А, 13-А, 14-Б, 15-В
+          </p>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      Успех! Литературата подрежда света чрез разказ, чувство и действие. 🌟
+    </footer>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "1. Кой литературен род се характеризира с разказване на събития, наличие на сюжет и повествовател (разказвач)?",
+        answers: {
+          A: "А) Лирика",
+          B: "Б) Епос",
+          C: "В) Драма",
+          D: "Г) Публицистика"
+        },
+        correct: "B"
+      },
+      {
+        text: "2. Жанрът „разказ“, който често използваме за описания на природата, принадлежи към:",
+        answers: {
+          A: "А) Лириката, защото описва чувства.",
+          B: "Б) Драмата, защото има диалози.",
+          C: "В) Епоса, защото изобразява случки в тяхната последователност.",
+          D: "Г) Научния стил, защото дава факти."
+        },
+        correct: "C"
+      },
+      {
+        text: "3. По какво най-лесно се разпознава лирическата творба?",
+        answers: {
+          A: "А) По наличието на много действащи лица.",
+          B: "Б) По стихотворната реч и изразяването на емоционални състояния.",
+          C: "В) По подробните описания на жизнените процеси на героите.",
+          D: "Г) По това, че винаги завършва с поука."
+        },
+        correct: "B"
+      },
+      {
+        text: "4. Кое от изброените е литературен ЖАНР, а не родов белег?",
+        answers: {
+          A: "А) Епос",
+          B: "Б) Разказ",
+          C: "В) Лирика",
+          D: "Г) Драма"
+        },
+        correct: "B"
+      },
+      {
+        text: "5. Кое от следните твърдения за епоса НЕ Е вярно?",
+        answers: {
+          A: "А) В епическата творба водещи са чувствата и преживяванията на лирическия герой.",
+          B: "Б) В епоса има разказвач, който представя случките.",
+          C: "В) Епическите творби имат сюжет и герои.",
+          D: "Г) Типични жанрове са разказът, повестта и пр."
+        },
+        correct: "A"
+      },
+      {
+        text: "6. Кой литературен род изразява предимно вътрешния свят на човека — мисли, чувства и емоции?",
+        answers: {
+          A: "А) Епос",
+          B: "Б) Лирика",
+          C: "В) Драма",
+          D: "Г) Роман"
+        },
+        correct: "B"
+      },
+      {
+        text: "7. Кой литературен род е предназначен за сцена?",
+        answers: {
+          A: "А) Лирика",
+          B: "Б) Епос",
+          C: "В) Драма",
+          D: "Г) Басня"
+        },
+        correct: "C"
+      },
+      {
+        text: "8. Как се нарича подразделението на литературните родове?",
+        answers: {
+          A: "А) Тема",
+          B: "Б) Жанр",
+          C: "В) Герой",
+          D: "Г) Конфликт"
+        },
+        correct: "B"
+      },
+      {
+        text: "9. Кое произведение е посочено като пример за епическа творба в текста?",
+        answers: {
+          A: "А) „Хубава си, моя горо“",
+          B: "Б) „Братчетата на Гаврош“",
+          C: "В) „Под игото“",
+          D: "Г) „Ромео и Жулиета“"
+        },
+        correct: "C"
+      },
+      {
+        text: "10. Кои са трите основни литературни рода?",
+        answers: {
+          A: "А) Роман, разказ, басня",
+          B: "Б) Ода, елегия, комедия",
+          C: "В) Епос, лирика и драма",
+          D: "Г) Автор, герой и читател"
+        },
+        correct: "C"
+      },
+      {
+        text: "11. Кои от изброените жанрове принадлежат към драмата?",
+        answers: {
+          A: "А) Комедия и трагедия",
+          B: "Б) Роман и легенда",
+          C: "В) Ода и елегия",
+          D: "Г) Басня и предание"
+        },
+        correct: "A"
+      },
+      {
+        text: "12. Какво е характерно за драмата според текста?",
+        answers: {
+          A: "А) Събитията се показват чрез действия и реплики на героите.",
+          B: "Б) Винаги се пише като кратко стихотворение.",
+          C: "В) Няма герои и конфликт.",
+          D: "Г) Съдържа само описание на природата."
+        },
+        correct: "A"
+      },
+      {
+        text: "13. Кой жанр е лирическо произведение, пропито с възторжени чувства и възпяващо героични събития или личности?",
+        answers: {
+          A: "А) Ода",
+          B: "Б) Разказ",
+          C: "В) Легенда",
+          D: "Г) Комедия"
+        },
+        correct: "A"
+      },
+      {
+        text: "14. Какво представлява елегията?",
+        answers: {
+          A: "А) Драматична творба със смешни ситуации.",
+          B: "Б) Лирическо произведение, изградено върху скръбни преживявания.",
+          C: "В) Епически жанр с много герои и дълъг сюжет.",
+          D: "Г) Научен текст с факти и определения."
+        },
+        correct: "B"
+      },
+      {
+        text: "15. Към кой литературен род се отнасят жанровете роман, разказ, легенда, предание, епическа поема и басня?",
+        answers: {
+          A: "А) Лирика",
+          B: "Б) Драма",
+          C: "В) Епос",
+          D: "Г) Публицистика"
+        },
+        correct: "C"
+      }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let answered = false;
+
+    const questionText = document.getElementById("questionText");
+    const answersBox = document.getElementById("answersBox");
+    const feedbackBox = document.getElementById("feedbackBox");
+    const checkBtn = document.getElementById("checkBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const progressText = document.getElementById("progressText");
+    const scoreText = document.getElementById("scoreText");
+    const progressFill = document.getElementById("progressFill");
+    const questionCard = document.getElementById("questionCard");
+    const gameButtons = document.getElementById("gameButtons");
+    const topPanel = document.getElementById("topPanel");
+    const finalScreen = document.getElementById("finalScreen");
+    const finalScore = document.getElementById("finalScore");
+    const finalMessage = document.getElementById("finalMessage");
+
+    function renderQuestion() {
+      const current = questions[currentQuestionIndex];
+      answered = false;
+
+      questionCard.style.display = "block";
+      gameButtons.style.display = "flex";
+      topPanel.style.display = "grid";
+      finalScreen.style.display = "none";
+
+      questionText.textContent = current.text;
+      answersBox.innerHTML = "";
+      feedbackBox.className = "feedback";
+      feedbackBox.textContent = "";
+
+      Object.entries(current.answers).forEach(([key, value]) => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="radio" name="answer" value="${key}"> ${value}`;
+        answersBox.appendChild(label);
+      });
+
+      progressText.textContent = `Въпрос ${currentQuestionIndex + 1} от ${questions.length}`;
+      scoreText.textContent = `Точки: ${score}`;
+      progressFill.style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
+
+      checkBtn.disabled = false;
+      nextBtn.disabled = true;
+      nextBtn.textContent =
+        currentQuestionIndex === questions.length - 1
+          ? "Виж резултата"
+          : "Следващ въпрос";
+    }
+
+    function checkCurrentAnswer() {
+      if (answered) return;
+
+      const selected = document.querySelector('input[name="answer"]:checked');
+
+      if (!selected) {
+        feedbackBox.className = "feedback warn";
+        feedbackBox.textContent = "Първо избери отговор. 🙂";
+        return;
+      }
+
+      answered = true;
+
+      const current = questions[currentQuestionIndex];
+      const labels = answersBox.querySelectorAll("label");
+
+      labels.forEach(label => {
+        const input = label.querySelector("input");
+
+        label.classList.add("disabled");
+
+        if (input.value === current.correct) {
+          label.classList.add("correct");
+        }
+
+        if (input.checked && input.value !== current.correct) {
+          label.classList.add("wrong");
+        }
+      });
+
+      if (selected.value === current.correct) {
+        score++;
+        feedbackBox.className = "feedback ok";
+        feedbackBox.textContent = "Вярно! Отлична работа! ✅";
+      } else {
+        feedbackBox.className = "feedback no";
+        feedbackBox.textContent = "Не е вярно. Виж зеления отговор и продължи. ❌";
+      }
+
+      scoreText.textContent = `Точки: ${score}`;
+      checkBtn.disabled = true;
+      nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+      if (!answered) return;
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex >= questions.length) {
+        showFinalScreen();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function showFinalScreen() {
+      questionCard.style.display = "none";
+      gameButtons.style.display = "none";
+      topPanel.style.display = "none";
+      finalScreen.style.display = "block";
+      progressFill.style.width = "100%";
+
+      finalScore.textContent = `Твоят резултат е ${score} от ${questions.length} точки.`;
+
+      if (score >= 13) {
+        finalMessage.textContent = "Отлично! Познаваш много добре литературните родове и жанрове. 🌟";
+      } else if (score >= 9) {
+        finalMessage.textContent = "Добра работа! Преговори няколко понятия и ще стане още по-добре. 📚";
+      } else {
+        finalMessage.textContent = "Не се отказвай! Прочети отново научния текст и опитай пак. 💪";
+      }
+
+      finalScreen.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+
+    function restartGame() {
+      currentQuestionIndex = 0;
+      score = 0;
+      answered = false;
+      renderQuestion();
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
